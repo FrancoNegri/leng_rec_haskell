@@ -19,15 +19,23 @@ tryClassifier x y = let xs = extraerFeatures ([longitudPromedioPalabras, repetic
 mean :: [Float] -> Float
 mean xs = realToFrac (sum xs) / genericLength xs
 
+-- Punto 1
 split :: Eq a => a -> [a] -> [[a]]
-split = undefined
+split delimiter = foldr f [[]] 
+          where f c l@(x:xs) | c == delimiter = []:l
+                             | otherwise = (c:x):xs
 
+-- Punto 2
 longitudPromedioPalabras :: Extractor
-longitudPromedioPalabras = undefined
+longitudPromedioPalabras frase =  mean (map genericLength (split ' ' frase))
 
+-- Punto 3
 cuentas :: Eq a => [a] -> [(Int, a)]
-cuentas = undefined
+cuentas lista = nub (map (\x -> (contar (==x) lista, x)) lista)
 
+contar a = length . filter a
+
+-- Punto 4
 repeticionesPromedio :: Extractor
 repeticionesPromedio = undefined
 
