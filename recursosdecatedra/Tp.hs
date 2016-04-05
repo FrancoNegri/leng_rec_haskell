@@ -119,7 +119,12 @@ nFoldCrossValidation n datos etiquetas = mean [fold n datos etiquetas i  | i <- 
 
 fold n datos etiquetas i = accuracy (map (knn 15 entrenamiento etiquetasEnt distEuclideana) test) etiquetasTest
   where particion = separarDatos datos etiquetas n i
-  entrenamiento = fst particion
-  test = snd(fst(particion))
-  etiquetasEnt = snd(snd(fst(particion)))
-  etiquetasTest = snd(snd(snd(particion)))
+  	entrenamiento = primero particion
+  	test = segundo particion
+  	etiquetasEnt = tercero particion
+ 	etiquetasTest = cuarto particion
+
+primero (a,_,_,_) = a
+segundo (_,a,_,_) = a
+tercero (_,_,a,_) = a
+cuarto (_,_,_,a) = a
