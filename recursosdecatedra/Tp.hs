@@ -28,7 +28,7 @@ sacarVacios = foldr ( \xs rec -> if xs == [] then rec else (xs:rec) ) []
 
 -- Punto 2
 longitudPromedioPalabras :: Extractor
-longitudPromedioPalabras frase =  mean (map genericLength (split ' ' frase))
+longitudPromedioPalabras frase =  mean (map (\(x,y) -> genericLength y) (cuentas (split ' ' frase)) )
 
 -- Punto 3
 cuentas :: Eq a => [a] -> [(Int, a)]
