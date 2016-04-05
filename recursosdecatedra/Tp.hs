@@ -21,7 +21,10 @@ mean xs = realToFrac (sum xs) / genericLength xs
 
 -- Punto 1
 split :: Eq a => a -> [a] -> [[a]]
-split del = foldr ( \x (ys:rec) -> if x == del then []:(ys:rec) else (x:ys):rec ) [[]]
+split del xs = sacarVacios ( foldr ( \x (ys:rec) -> if x == del then []:(ys:rec) else (x:ys):rec ) [[]] xs ) 
+
+sacarVacios :: Eq a => [[a]] -> [[a]]
+sacarVacios = foldr ( \xs rec -> if xs == [] then rec else (xs:rec) ) []
 
 -- Punto 2
 longitudPromedioPalabras :: Extractor
