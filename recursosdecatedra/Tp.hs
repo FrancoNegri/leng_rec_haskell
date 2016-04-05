@@ -17,7 +17,7 @@ tryClassifier x y = let xs = extraerFeatures ([longitudPromedioPalabras, repetic
     nFoldCrossValidation 5 xs y
 
 mean :: [Float] -> Float
-mean xs = realToFrac (sum xs) / genericLength xs
+mean xs = if xs == [] then 0 else realToFrac (sum xs) / genericLength xs
 
 -- Punto 1
 split :: Eq a => a -> [a] -> [[a]]
