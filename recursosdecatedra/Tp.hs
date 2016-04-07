@@ -118,7 +118,7 @@ accuracy = \xs ys -> sum(zipWith f xs ys) / fromIntegral(genericLength xs)
 
 -- Punto 12
 nFoldCrossValidation :: Int -> Datos -> [Etiqueta] -> Float
-nFoldCrossValidation n datos etiquetas = mean [fold n datos etiquetas i  | i <- [0..14]] 
+nFoldCrossValidation n datos etiquetas = mean [fold n datos etiquetas i  | i <- [1..15]] 
 
 fold n datos etiquetas i = accuracy (map (knn 15 entrenamiento etiquetasEnt distEuclideana) test) etiquetasTest
   where particion = separarDatos datos etiquetas n i
