@@ -28,7 +28,7 @@ sacarVacios = foldr ( \xs rec -> if xs == [] then rec else (xs:rec) ) []
 
 -- Punto 2
 longitudPromedioPalabras :: Extractor
-longitudPromedioPalabras frase =  mean (map (\(x,y) -> genericLength y) (cuentas (split ' ' frase)) )
+longitudPromedioPalabras =  (\frase -> mean (map (\(x,y) -> genericLength y) (cuentas (split ' ' frase)) ) )
 
 -- Punto 3
 cuentas :: Eq a => [a] -> [(Int, a)]
@@ -39,7 +39,7 @@ contar a = genericLength . filter a
 
 -- Punto 4
 repeticionesPromedio :: Extractor
-repeticionesPromedio texto = mean ( (map (\(x, y) -> fromIntegral x) (cuentas (split ' ' texto)) ) )
+repeticionesPromedio = (\texto -> mean ( (map (\(x, y) -> fromIntegral x) (cuentas (split ' ' texto)) ) ) )
 
 -- Punto 5
 tokens :: [Char]
@@ -58,49 +58,33 @@ extraerFeatures exs txts = [ [extractor  txt | extractor <- [normalizarExtractor
 
 -- Punto 8
 distEuclideana :: Medida
-distEuclideana p q = sqrt (sum (map (\x -> x*x) (zipWith (-) p q)))
+distEuclideana = (\p q -> sqrt (sum (map (\x -> x*x) (zipWith (-) p q))))
 
 distCoseno :: Medida
-distCoseno p q = (prodVect p q) / (norma p * norma q)
+distCoseno = (\p q -> (prodVect p q) / (norma p * norma q))
                   where prodVect p q = sum(zipWith (*) p q)
                         norma r = sqrt(prodVect r r)
+
+
 -- Punto 9
 knn :: Int -> Datos -> [Etiqueta] -> Medida -> Modelo
-knn k datos etiquetas medida =  (\nuevoDato -> snd (maximo (cuentas (getk k (ordenar (zipWith (\x y -> (x,y)) (map (medida nuevoDato) datos) etiquetas))))))
+knn k datos etiquetas medida = (\instancia -> (obtenerModa ( vecinosMasCercanos k ( etiquetar (obtenerMedidas instancia medida datos) etiquetas)  ) ) )
 
-orden x z | fst x < fst z = LT
-          |otherwise = GT
-ordenar xs = sortBy orden xs
- 
-getk k lista = map (\x -> snd x) (take k lista)
+obtenerMedidas :: Instancia -> Medida -> Datos -> [(Float, Instancia)]
+obtenerMedidas origen medida datos = [(medida origen instancia, instancia) | instancia <- datos] -- ¿Porque (medida origen instancia) y no (medida instancia origen)?
+--obtenerMedidas origen medida datos = [ (0.6, instancia) | instancia <- datos ]
 
-ordenEtiquetas x z | fst x < fst z = LT
-                   |otherwise = GT
+etiquetar :: [(Float, Instancia)] -> [Etiqueta] -> [(Float, Etiqueta)]
+etiquetar = zipWith (\(x, y) e -> (x, e))
 
-maximo = maximumBy ordenEtiquetas 
+vecinosMasCercanos :: Int ->[(Float, Etiqueta)] -> [Etiqueta]
+vecinosMasCercanos n medidas = map (\x -> snd x) (take n ( sortBy (primerCord) medidas ))
 
--- Punto 9 (Solución de Javier)
---knn :: Int -> Datos -> [Etiqueta] -> Medida -> Modelo
---knn cantVecinos datos etiquetas medida instancia = obtenerModa ( vecinosMasCercanos cantVecinos ( etiquetar (obtenerMedidas instancia medida datos) etiquetas)  )
+primerCord :: Ord a => (a, Etiqueta) ->(a, Etiqueta) ->Ordering
+primerCord (x1,x2) (y1,y2) = if x1 < y1 then LT else GT
 
---obtenerMedidas :: Instancia ->Medida ->Datos ->[(Float, Instancia)]
---obtenerMedidas instanciaOrigen medida datos = [ (medida instanciaOrigen instancia, instancia) | instancia <- datos ]
-
---etiquetar :: [(Float, Instancia)] -> [Etiqueta] -> [(Float, Etiqueta)]
---etiquetar medidas etiquetas = [ ( fst ( medidas !! i ), etiquetas !! i ) | i <- [0..(genericLength etiquetas -1)] ]
-
---vecinosMasCercanos :: Int ->[(Float, Etiqueta)] -> [Etiqueta]
---vecinosMasCercanos n medidas = map (\x -> snd x) (take n ( sortBy (compararDatos) medidas ))
-
---compararDatos :: (Float, Etiqueta) ->(Float, Etiqueta) ->Ordering
---compararDatos (x1,x2) (y1,y2) = if x1 < y1 then LT else GT
-
---obtenerModa :: [Etiqueta] ->Etiqueta
---obtenerModa etiquetas = snd ( maximumBy (compararFrecuencias) (cuentas etiquetas) )
-
---compararFrecuencias :: (Int, Etiqueta) ->(Int, Etiqueta) ->Ordering
---compararFrecuencias (x1,x2) (y1,y2) = if x1 < y1 then LT else GT
-
+obtenerModa :: [Etiqueta] ->Etiqueta
+obtenerModa etiquetas = snd ( maximumBy (primerCord) (cuentas etiquetas) )
 
 
 -- Punto 10
@@ -118,16 +102,8 @@ accuracy = \xs ys -> sum(zipWith f xs ys) / fromIntegral(genericLength xs)
 
 -- Punto 12
 nFoldCrossValidation :: Int -> Datos -> [Etiqueta] -> Float
-nFoldCrossValidation n datos etiquetas = mean [fold n datos etiquetas i  | i <- [1..15]] 
+nFoldCrossValidation n datos etiquetas = mean [resultados (getParticion i) | i <- [n-2..n-1]] 
+    where getParticion i = separarDatos datos etiquetas n i
 
-fold n datos etiquetas i = accuracy (map (knn 15 entrenamiento etiquetasEnt distEuclideana) test) etiquetasTest
-  where particion = separarDatos datos etiquetas n i
-  	entrenamiento = primero particion
-  	test = segundo particion
-  	etiquetasEnt = tercero particion
- 	etiquetasTest = cuarto particion
-
-primero (a,_,_,_) = a
-segundo (_,a,_,_) = a
-tercero (_,_,a,_) = a
-cuarto (_,_,_,a) = a
+resultados :: (Datos, Datos, [Etiqueta], [Etiqueta]) -> Float
+resultados (entrenamiento, tests, etiquetasEnt, etiquetasTest) = accuracy (map (knn 15 entrenamiento etiquetasEnt distEuclideana) tests) etiquetasTest

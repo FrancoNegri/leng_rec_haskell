@@ -9,14 +9,16 @@ import Data.List
 main = runTestTT allTests
 
 allTests = test [
- 	"split" ~: testsSplit,
+	"split" ~: testsSplit,
  	"longitud" ~: testlongitud,
  	"cuentas" ~: testsCuentas,
 	"repeticionesPromedio" ~: testRepeticionesPromedio,
 	"frecuenciasTokens" ~: testFrecuenciasTokens,
+	"normalizarExtractor" ~: testNormalizarExtractor,
 	"extraerFeatures" ~: testExtraerFeatures,
 	"distEuclideana" ~: testDistEuclideana,
 	"distCoseno" ~: testDistCoseno,
+	"KNN" ~: testKNN,
 	"accuracy" ~: testAccuracy
  	] 
 
@@ -41,7 +43,10 @@ testlongitud = test [
 
 -----test 3
 testsCuentas = test [
-	cuentas ["x","x","y","x","z"] ~?= [(3,"x"), (1,"y"), (1,"z")]
+	cuentas ["x","x","y","x","z"] ~?= [(3,"x"), (1,"y"), (1,"z")],
+	--cuentas [] ~?= [], // Da eso, pero tira un error raro HUnit
+	cuentas ["a"] ~?= [(1, "a")],
+	cuentas ["f++", "i++", "++", "i++", "j++", "++", "i++"] ~?= [(1, "f++"), (3, "i++"), (2, "++"), (1, "j++")]
 	]
 
 ------test 4
@@ -60,10 +65,20 @@ testFrecuenciasTokens = test [
 	(head (tail frecuenciaTokens)) ",,," ~?=1
 	]
 
+-----test 6
+-- La lista vaciá: [], no cumple la precondición
+testNormalizarExtractor = test [
+	(normalizarExtractor ["a a a a a", "hola hola", " ", "while(true){ i++}"] longitudPromedioPalabras) "a a a a a" ~?= 0.125,
+	(normalizarExtractor ["a a a a a", "hola hola", " ", "while(true){ i++}"] longitudPromedioPalabras) "hola hola" ~?= 0.50,
+	(normalizarExtractor ["a a a a a", "hola hola", " ", "while(true){ i++}"] longitudPromedioPalabras) " " ~?= 0.0,
+	(normalizarExtractor ["a a a a a", "hola hola", " ", "while(true){ i++}"] longitudPromedioPalabras) "while(true){ i++}" ~?= 1.0,
+	(normalizarExtractor ["a a a a a", "hola hola", " ", "while(true){ i++}"] repeticionesPromedio) "a a a a a" ~?= 1.0,
+	(normalizarExtractor ["a a a a a", "hola hola", " ", "while(true){ i++}"] repeticionesPromedio) "hola hola" ~?= 0.4,
+	(normalizarExtractor ["a a a a a", "hola hola", " ", "while(true){ i++}"] repeticionesPromedio) " " ~?= 0.0,
+	(normalizarExtractor ["a a a a a", "hola hola", " ", "while(true){ i++}"] repeticionesPromedio) "while(true){ i++}" ~?= 0.2
+	]
 
-
----test 7
-
+-----test 7
 text1 = "n = succ ( succ ( succ 2 ) )"
 text2 = "a++; a = 2; b = a;"
 text3 = "while ( true ) a++ ;"
@@ -76,8 +91,7 @@ testExtraerFeatures = test [
 	]
 	
 
----- test 8
-
+----test 8
 testDistEuclideana = test [
 		distEuclideana [1.0,0.75,0.8125] [0.75,1.0,0.5] ~?= 0.47186464,
 		distEuclideana [1,1,1] [1,1,1] ~?= 0,
@@ -90,8 +104,12 @@ testDistCoseno = test [
 		distCoseno [3,3,3,3,3,3] [3,3,3,3,3,3] ~?= 1
 	]
 
---test 11
+----test 9
+testKNN = test [
+	(knn 2 [[0,1],[0,2],[2,1],[1,1],[2,3]] ["i","i","f","f","i"] distEuclideana) [1,1] ~?= "f"
+	]
 
+--test 11
 testAccuracy = test [
 		accuracy ["i"] ["i"] ~?= 1,
 		accuracy ["f"] ["i"] ~?= 0,
