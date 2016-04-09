@@ -77,7 +77,7 @@ testNormalizarExtractor = test [
 	(normalizarExtractor ["a a a a a", "hola hola", " ", "while(true){ i++}"] repeticionesPromedio) " " ~?= 0.0,
 	(normalizarExtractor ["a a a a a", "hola hola", " ", "while(true){ i++}"] repeticionesPromedio) "while(true){ i++}" ~?= 0.2
 	]
-
+	
 -----test 7
 text1 = "n = succ ( succ ( succ 2 ) )"
 text2 = "a++; a = 2; b = a;"
@@ -90,7 +90,6 @@ testExtraerFeatures = test [
 	--[[0,0],[0,0],[9/6 = 1.5, 10/6 = 1.66], [11/6 = 1.83, 1], [15/6 = 2.5, 1]] (sin normalizar)
 	]
 	
-
 ----test 8
 testDistEuclideana = test [
 		distEuclideana [1.0,0.75,0.8125] [0.75,1.0,0.5] ~?= 0.47186464,
@@ -105,9 +104,26 @@ testDistCoseno = test [
 	]
 
 ----test 9
-testKNN = test [
-	(knn 2 [[0,1],[0,2],[2,1],[1,1],[2,3]] ["i","i","f","f","i"] distEuclideana) [1,1] ~?= "f"
+	testKnn = test [
+	(knn 2 [[0,1],[0,2],[2,1],[1,1],[2,3]] ["i","i","f","f","i"] distEuclideana) [1,1] ~=? "f",
+    (knn 2 [[0,1],[0,2],[2,1],[1,1],[2,3]] ["i","i","i","i","i"] distEuclideana) [1,1] ~=? "i",
+    (knn 2 [[0,1],[0,2],[2,1],[1,1],[2,3]] ["f","f","f","f","f"] distEuclideana) [1,1] ~=? "f",
+    (knn 2 [[0,1],[0,2],[0,3],[0,4],[0,5]] ["f","f","i","i","i"] distEuclideana) [0,0] ~=? "f",
+    (knn 2 [[0,1],[0,2],[0,3],[0,4],[0,5]] ["i","i","f","f","f"] distEuclideana) [0,0] ~=? "i",
 	]
+
+----test 10
+datos = [[0,0],[0,0],[1.5, 1.66], [1.71, 1.16], [2.5, 1]]
+etiquetas = ["f", "i", "f", "f", "i"]
+testSepararDatos = test [
+	separarDatos datos etiquetas 1 1 ~?= ( [], datos, [], etiquetas),
+	separarDatos [] [] 1 1 ~?= ( [], [], [], []),
+	separarDatos [] [] 5 1 ~?= ( [], [], [], []),
+	separarDatos [] [] 5 4 ~?= ( [], [], [], []),
+	separarDatos [[1]] ["f"] 1 1 ~?= ( [], [[1]], [], ["f"] ),
+	separarDatos datos etiquetas 5 2 ~?= ( [[0,0],[1.5, 1.66], [1.71, 1.16], [2.5, 1]], [[0,0]], ["f", "f", "f", "i"], ["i"]),
+	separarDatos datos etiquetas 2 2 ~?= ( [[0,0],[0,0]], [[1.5, 1.66], [1.71, 1.16]], ["f", "i"], ["f", "f"])
+
 
 --test 11
 testAccuracy = test [

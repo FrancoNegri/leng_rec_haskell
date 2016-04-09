@@ -17,14 +17,11 @@ tryClassifier x y = let xs = extraerFeatures ([longitudPromedioPalabras, repetic
     nFoldCrossValidation 5 xs y
 
 mean :: [Float] -> Float
-mean xs = if xs == [] then 0 else realToFrac (sum xs) / genericLength xs
+mean xs = if null xs then 0 else realToFrac (sum xs) / genericLength xs
 
 -- Punto 1
 split :: Eq a => a -> [a] -> [[a]]
-split del xs = sacarVacios ( foldr ( \x (ys:rec) -> if x == del then []:(ys:rec) else (x:ys):rec ) [[]] xs ) 
-
-sacarVacios :: Eq a => [[a]] -> [[a]]
-sacarVacios = foldr ( \xs rec -> if xs == [] then rec else (xs:rec) ) []
+split del xs = filter (not . null) ( foldr ( \x (ys:rec) -> if x == del then []:(ys:rec) else (x:ys):rec ) [[]] xs ) 
 
 -- Punto 2
 longitudPromedioPalabras :: Extractor
@@ -39,7 +36,7 @@ contar a = genericLength . filter a
 
 -- Punto 4
 repeticionesPromedio :: Extractor
-repeticionesPromedio = (\texto -> mean ( (map (\(x, y) -> fromIntegral x) (cuentas (split ' ' texto)) ) ) )
+repeticionesPromedio = (\texto -> mean ( (map (fromIntegral . fst) (cuentas (split ' ' texto)) ) ) )
 
 -- Punto 5
 tokens :: [Char]
@@ -54,38 +51,29 @@ normalizarExtractor txts extractor = (\texto -> (extractor  texto) / norma) wher
 
 -- Punto 7
 extraerFeatures :: [Extractor] -> [Texto] -> Datos
-extraerFeatures exs txts = [ [extractor  txt | extractor <- [normalizarExtractor txts ex | ex <- exs ]] | txt <- txts ]
+extraerFeatures extractores textos =  map aplicarExtNorm textos
+                where aplicarExtNorm = ( \txt -> map (\extractor -> extractor txt) extractoresNormalizados)
+                      extractoresNormalizados = map (normalizarExtractor textos) extractores
 
 -- Punto 8
 distEuclideana :: Medida
-distEuclideana = (\p q -> sqrt (sum (map (\x -> x*x) (zipWith (-) p q))))
+distEuclideana = (\p q -> sqrt (sum (zipWith (*) (zipWith (-) p q)  (zipWith (-) p q) )))
+
 
 distCoseno :: Medida
 distCoseno = (\p q -> (prodVect p q) / (norma p * norma q))
                   where prodVect p q = sum(zipWith (*) p q)
                         norma r = sqrt(prodVect r r)
 
-
 -- Punto 9
 knn :: Int -> Datos -> [Etiqueta] -> Medida -> Modelo
-knn k datos etiquetas medida = (\instancia -> (obtenerModa ( vecinosMasCercanos k ( etiquetar (obtenerMedidas instancia medida datos) etiquetas)  ) ) )
+knn k datos etiquetas distancia origen = moda (map snd kVecinosMasCercanos)
+    where kVecinosMasCercanos = take k (sort distanciasYEtiquetas)
+          distanciasYEtiquetas = zip distancias etiquetas
+          distancias = map (distancia origen) datos
 
-obtenerMedidas :: Instancia -> Medida -> Datos -> [(Float, Instancia)]
-obtenerMedidas origen medida datos = [(medida origen instancia, instancia) | instancia <- datos] -- ¿Porque (medida origen instancia) y no (medida instancia origen)?
---obtenerMedidas origen medida datos = [ (0.6, instancia) | instancia <- datos ]
-
-etiquetar :: [(Float, Instancia)] -> [Etiqueta] -> [(Float, Etiqueta)]
-etiquetar = zipWith (\(x, y) e -> (x, e))
-
-vecinosMasCercanos :: Int ->[(Float, Etiqueta)] -> [Etiqueta]
-vecinosMasCercanos n medidas = map (\x -> snd x) (take n ( sortBy (primerCord) medidas ))
-
-primerCord :: Ord a => (a, Etiqueta) ->(a, Etiqueta) ->Ordering
-primerCord (x1,x2) (y1,y2) = if x1 < y1 then LT else GT
-
-obtenerModa :: [Etiqueta] ->Etiqueta
-obtenerModa etiquetas = snd ( maximumBy (primerCord) (cuentas etiquetas) )
-
+moda :: [Etiqueta] -> Etiqueta
+moda etiquetas = snd (maximum (cuentas etiquetas))
 
 -- Punto 10
 separarDatos :: Datos -> [Etiqueta] -> Int -> Int -> (Datos, Datos, [Etiqueta], [Etiqueta])
@@ -97,7 +85,7 @@ separarDatos datos etiquetas n p = ([ datos !! j | j <- [0..(n * tamPart - 1)], 
 
 -- Punto 11
 accuracy :: [Etiqueta] -> [Etiqueta] -> Float
-accuracy = \xs ys -> sum(zipWith f xs ys) / fromIntegral(genericLength xs)
+accuracy = \xs ys -> fromIntegral (sum(zipWith f xs ys)) / fromIntegral(genericLength xs)
             where f = \x y -> if x == y then 1 else 0 
 
 -- Punto 12
