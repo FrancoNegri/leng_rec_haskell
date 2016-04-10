@@ -102,6 +102,20 @@ testDistCoseno = test [
 		distCoseno [1,1,1] [1,1,1] ~?= 1,
 		distCoseno [3,3,3,3,3,3] [3,3,3,3,3,3] ~?= 1
 	]
+	
+--test10
+
+datos = [[0,0],[0,0],[1.5, 1.66], [1.71, 1.16], [2.5, 1]]
+etiquetas = ["f", "i", "f", "f", "i"]
+testSepararDatos = test [
+	separarDatos datos etiquetas 1 1 ~?= ( [], datos, [], etiquetas),
+	separarDatos [] [] 1 1 ~?= ( [], [], [], []),
+	separarDatos [] [] 5 1 ~?= ( [], [], [], []),
+	separarDatos [] [] 5 4 ~?= ( [], [], [], []),
+	separarDatos [[1]] ["f"] 1 1 ~?= ( [], [[1]], [], ["f"] ),
+	separarDatos datos etiquetas 5 2 ~?= ( [[0,0],[1.5, 1.66], [1.71, 1.16], [2.5, 1]], [[0,0]], ["f", "f", "f", "i"], ["i"]),
+	separarDatos datos etiquetas 2 2 ~?= ( [[0,0],[0,0]], [[1.5, 1.66], [1.71, 1.16]], ["f", "i"], ["f", "f"])
+	]
 
 ----test 9
 	testKnn = test [
