@@ -94,50 +94,38 @@ testExtraerFeatures = test [
 testDistEuclideana = test [
 		distEuclideana [1.0,0.75,0.8125] [0.75,1.0,0.5] ~?= 0.47186464,
 		distEuclideana [1,1,1] [1,1,1] ~?= 0,
-		distEuclideana [1,2,3,4] [5,6,7,8] ~?= 8
+		distEuclideana [1,2,3,4] [5,6,7,8] ~?= 8,
+        distEuclideana [5,6,7,8] [1,2,3,4] ~?= 8
 	]
 
 testDistCoseno = test [
 		distCoseno [0,3,4] [0,-3,-4] ~?= -1.0,
+        distCoseno [0,-3,-4] [0,3,4] ~?= -1.0,
 		distCoseno [1,1,1] [1,1,1] ~?= 1,
 		distCoseno [3,3,3,3,3,3] [3,3,3,3,3,3] ~?= 1
 	]
-	
---test10
-
-datos = [[0,0],[0,0],[1.5, 1.66], [1.71, 1.16], [2.5, 1]]
-etiquetas = ["f", "i", "f", "f", "i"]
-testSepararDatos = test [
-	separarDatos datos etiquetas 1 1 ~?= ( [], datos, [], etiquetas),
-	separarDatos [] [] 1 1 ~?= ( [], [], [], []),
-	separarDatos [] [] 5 1 ~?= ( [], [], [], []),
-	separarDatos [] [] 5 4 ~?= ( [], [], [], []),
-	separarDatos [[1]] ["f"] 1 1 ~?= ( [], [[1]], [], ["f"] ),
-	separarDatos datos etiquetas 5 2 ~?= ( [[0,0],[1.5, 1.66], [1.71, 1.16], [2.5, 1]], [[0,0]], ["f", "f", "f", "i"], ["i"]),
-	separarDatos datos etiquetas 2 2 ~?= ( [[0,0],[0,0]], [[1.5, 1.66], [1.71, 1.16]], ["f", "i"], ["f", "f"])
-	]
 
 ----test 9
-	testKnn = test [
+testKNN = test [
 	(knn 2 [[0,1],[0,2],[2,1],[1,1],[2,3]] ["i","i","f","f","i"] distEuclideana) [1,1] ~=? "f",
-    (knn 2 [[0,1],[0,2],[2,1],[1,1],[2,3]] ["i","i","i","i","i"] distEuclideana) [1,1] ~=? "i",
-    (knn 2 [[0,1],[0,2],[2,1],[1,1],[2,3]] ["f","f","f","f","f"] distEuclideana) [1,1] ~=? "f",
-    (knn 2 [[0,1],[0,2],[0,3],[0,4],[0,5]] ["f","f","i","i","i"] distEuclideana) [0,0] ~=? "f",
-    (knn 2 [[0,1],[0,2],[0,3],[0,4],[0,5]] ["i","i","f","f","f"] distEuclideana) [0,0] ~=? "i",
+	(knn 2 [[0,1],[0,2],[2,1],[1,1],[2,3]] ["i","i","i","i","i"] distEuclideana) [1,1] ~=? "i",
+	(knn 2 [[0,1],[0,2],[2,1],[1,1],[2,3]] ["f","f","f","f","f"] distEuclideana) [1,1] ~=? "f",
+	(knn 2 [[0,1],[0,2],[0,3],[0,4],[0,5]] ["f","f","i","i","i"] distEuclideana) [0,0] ~=? "f",
+	(knn 2 [[0,1],[0,2],[0,3],[0,4],[0,5]] ["i","i","f","f","f"] distEuclideana) [0,0] ~=? "i"
 	]
 
 ----test 10
-datos = [[0,0],[0,0],[1.5, 1.66], [1.71, 1.16], [2.5, 1]]
-etiquetas = ["f", "i", "f", "f", "i"]
+datos10 = [[0,0],[0,0],[1.5, 1.66], [1.71, 1.16], [2.5, 1]]
+etiquetas10 = ["f", "i", "f", "f", "i"]
 testSepararDatos = test [
-	separarDatos datos etiquetas 1 1 ~?= ( [], datos, [], etiquetas),
+	separarDatos datos10 etiquetas10 1 1 ~?= ( [], datos10, [], etiquetas10),
 	separarDatos [] [] 1 1 ~?= ( [], [], [], []),
 	separarDatos [] [] 5 1 ~?= ( [], [], [], []),
 	separarDatos [] [] 5 4 ~?= ( [], [], [], []),
 	separarDatos [[1]] ["f"] 1 1 ~?= ( [], [[1]], [], ["f"] ),
-	separarDatos datos etiquetas 5 2 ~?= ( [[0,0],[1.5, 1.66], [1.71, 1.16], [2.5, 1]], [[0,0]], ["f", "f", "f", "i"], ["i"]),
-	separarDatos datos etiquetas 2 2 ~?= ( [[0,0],[0,0]], [[1.5, 1.66], [1.71, 1.16]], ["f", "i"], ["f", "f"])
-
+	separarDatos datos10 etiquetas10 5 2 ~?= ( [[0,0],[1.5, 1.66], [1.71, 1.16], [2.5, 1]], [[0,0]], ["f", "f", "f", "i"], ["i"]),
+	separarDatos datos10 etiquetas10 2 2 ~?= ( [[0,0],[0,0]], [[1.5, 1.66], [1.71, 1.16]], ["f", "i"], ["f", "f"])
+	]
 
 --test 11
 testAccuracy = test [
@@ -145,3 +133,42 @@ testAccuracy = test [
 		accuracy ["f"] ["i"] ~?= 0,
 		accuracy ["f", "f", "i", "i", "f"] ["i", "f", "i", "f", "f"] ~?= 0.6
 	]
+    
+--test 12
+datos12 = [[0,1],[0,2],[2,1],[1,1],[2,3],[0,2],[2,1],[1,1],[2,3]]
+etiquetas12 = ["i","i","f","f","i","i","f","f","i"]
+
+-- Las tres particiones para calcular accuracy
+-- train_i = datos de entrenamiento de la particion i
+-- val_i = datos de validacion de la particion i
+
+(train_1, val_1, etTrain_1, etVal_1) = separarDatos datos12 etiquetas12 3  1
+(train_2, val_2, etTrain_2, etVal_2) = separarDatos datos12 etiquetas12 3  2
+(train_3, val_3, etTrain_3, etVal_3) = separarDatos datos12 etiquetas12 3  3
+
+-- etiquetasClasificada_i_j = etiqueta del j-esimo punto de val_i a todos los de train_i
+etiquetasClasificada_1_1 = knn 15 train_1 etTrain_1 distEuclideana (val_1 !! 0)
+etiquetasClasificada_1_2 = knn 15 train_1 etTrain_1 distEuclideana (val_1 !! 1)
+etiquetasClasificada_1_3 = knn 15 train_1 etTrain_1 distEuclideana (val_1 !! 2)
+
+etiquetasClasificada_2_1 = knn 15 train_2 etTrain_2 distEuclideana (val_2 !! 0)
+etiquetasClasificada_2_2 = knn 15 train_2 etTrain_2 distEuclideana (val_2 !! 1)
+etiquetasClasificada_2_3 = knn 15 train_2 etTrain_2 distEuclideana (val_2 !! 2)
+
+etiquetasClasificada_3_1 = knn 15 train_3 etTrain_3 distEuclideana (val_3 !! 0)
+etiquetasClasificada_3_2 = knn 15 train_3 etTrain_3 distEuclideana (val_3 !! 1)
+etiquetasClasificada_3_3 = knn 15 train_3 etTrain_3 distEuclideana (val_3 !! 2)
+
+etiquetasClasificadas1 = [ etiquetasClasificada_1_1, etiquetasClasificada_1_2, etiquetasClasificada_1_3 ] -- = ["i","i","i"]
+etiquetasClasificadas2 = [ etiquetasClasificada_2_1, etiquetasClasificada_2_2, etiquetasClasificada_2_3 ] -- = ["i","i","i"]
+etiquetasClasificadas3 = [ etiquetasClasificada_3_1, etiquetasClasificada_3_2, etiquetasClasificada_3_3 ] -- = ["i","i","i"]
+
+--accuracy etiquetasClasificadas1 = 1
+--accuracy etiquetasClasificadas2 = 1
+--accuracy etiquetasClasificadas3 = 1
+
+testNFoldCrossValidation = test [
+		nFoldCrossValidation 3 datos12 etiquetas12 ~?= 1,
+        nFoldCrossValidation 3 [] [] ~?= 1,
+        nFoldCrossValidation 1 datos12 etiquetas12 ~?= 1
+    ] 
