@@ -18,6 +18,8 @@ tryClassifier x y = let xs = extraerFeatures ([longitudPromedioPalabras, repetic
 
 mean :: [Float] -> Float
 mean xs = if null xs then 0 else realToFrac (sum xs) / genericLength xs
+-- Agregamos el chequeo por null para evitar tener que chequearlo en todas las funciones que utilizan a mean.
+
 
 -- Punto 1
 split :: Eq a => a -> [a] -> [[a]]
@@ -30,6 +32,7 @@ longitudPromedioPalabras =  (\frase -> mean (map (\(x,y) -> genericLength y) (cu
 -- Punto 3
 cuentas :: Eq a => [a] -> [(Int, a)]
 cuentas lista = nub (map (\x -> (contar (==x) lista, x)) lista)
+-- Usamos nub para eliminar los repetidos, ya que si un elemento aparece n veces entonces vamos a obtener n veces la tupla "(n, elemento)"
 
 contar :: Eq a => (a  -> Bool) -> [a] -> Int
 contar a = genericLength . filter a
@@ -48,6 +51,7 @@ frecuenciaTokens = [ \texto -> fromIntegral(contar (==tok) texto) / genericLengt
 -- Punto 6
 normalizarExtractor :: [Texto] -> Extractor -> Extractor
 normalizarExtractor txts extractor = (\texto -> (extractor  texto) / norma) where norma = maximum (map (abs . extractor) txts)
+-- Dividimos el resultado del extractor por el máximo obtenido de aplicarlo a todos los textos.
 
 -- Punto 7
 extraerFeatures :: [Extractor] -> [Texto] -> Datos
@@ -57,7 +61,8 @@ extraerFeatures extractores textos =  map aplicarExtNorm textos
 
 -- Punto 8
 distEuclideana :: Medida
-distEuclideana = (\p q -> sqrt (sum (zipWith (*) (zipWith (-) p q)  (zipWith (-) p q) )))
+distEuclideana = (\p q -> sqrt (sum (zipWith (*) (producto p q)  (producto p q) )))
+                  where producto a b = zipWith (-) a b
 
 
 distCoseno :: Medida
@@ -74,6 +79,7 @@ knn k datos etiquetas distancia origen = moda (map snd kVecinosMasCercanos)
 
 moda :: [Etiqueta] -> Etiqueta
 moda etiquetas = snd (maximum (cuentas etiquetas))
+-- La funcion "cuentas" arma una tupla (#apariciones, etiqueta). Usamos "snd" para quedarnos solo con la etiqueta.
 
 -- Punto 10
 separarDatos :: Datos -> [Etiqueta] -> Int -> Int -> (Datos, Datos, [Etiqueta], [Etiqueta])
@@ -82,11 +88,14 @@ separarDatos datos etiquetas n p = ([ datos !! j | j <- [0..(n * tamPart - 1)], 
                                     [ etiquetas !! j | j <- [0..(n * tamPart - 1)], notElem j [((p-1) * tamPart)..(p * tamPart - 1)] ],
                                     [ etiquetas !! i | i<-[((p-1) * tamPart)..(p * tamPart - 1)] ])
                                     where tamPart = div (genericLength datos) n
+-- La primer y la tercera lista toman todos los elementos de datos/etiquetas excepto los que corresponden
+-- a la partición de entrenamiento (la p-esima partición) y los que sobran al final por dividir en particiones de tamaño n.
+-- La segunda y cuarta listas toman los elementos correspondientes a la partición p-esima, es decir, la partición de entrenamiento.
 
 -- Punto 11
 accuracy :: [Etiqueta] -> [Etiqueta] -> Float
-accuracy = \xs ys -> fromIntegral (sum(zipWith f xs ys)) / fromIntegral(genericLength xs)
-            where f = \x y -> if x == y then 1 else 0 
+accuracy = \xs ys -> fromIntegral (sum(zipWith iguales xs ys)) / fromIntegral(genericLength xs)
+           where iguales = \x y -> if x == y then 1 else 0
 
 -- Punto 12
 nFoldCrossValidation :: Int -> Datos -> [Etiqueta] -> Float
