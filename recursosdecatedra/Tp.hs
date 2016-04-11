@@ -79,7 +79,9 @@ knn k datos etiquetas distancia origen = moda (map snd kVecinosMasCercanos)
 
 moda :: [Etiqueta] -> Etiqueta
 moda etiquetas = snd (maximum (cuentas etiquetas))
--- La funcion "cuentas" arma una tupla (#apariciones, etiqueta). Usamos "snd" para quedarnos solo con la etiqueta.
+-- La funcion "cuentas" arma una tupla (#apariciones, etiqueta).
+-- Como la tupla pertenece a la clase Ord, se puede sacar el maximo sin usar maximumBy. 
+-- Usamos "snd" para quedarnos solo con la etiqueta.
 
 -- Punto 10
 separarDatos :: Datos -> [Etiqueta] -> Int -> Int -> (Datos, Datos, [Etiqueta], [Etiqueta])
